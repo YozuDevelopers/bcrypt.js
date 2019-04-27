@@ -65,28 +65,15 @@
      * @inner
      */
     function random(len) {
-        /* node */ if (typeof module !== 'undefined' && module && module['exports'])
-            try {
-                return require("crypto")['randomBytes'](len);
-            } catch (e) {}
-        /* WCA */ try {
-            var a; (self['crypto']||self['msCrypto'])['getRandomValues'](a = new Uint32Array(len));
-            return Array.prototype.slice.call(a);
-        } catch (e) {}
-        /* fallback */ if (!randomFallback)
-            throw Error("Neither WebCryptoAPI nor a crypto module is available. Use bcrypt.setRandomFallback to set an alternative");
+        /* fallback */
+        if (!randomFallback) {
+            console.warn("Using Math.random is not cryptographically secure! Use bcrypt.setRandomFallback to set a PRNG.");
+            var buf = [...Array(len)];
+            return buf.map(() => Math.floor(Math.random() * (256 - 1 + 1) + 1));
+        }
         return randomFallback(len);
     }
 
-    // Test if any secure randomness source is available
-    var randomAvailable = false;
-    try {
-        random(1);
-        randomAvailable = true;
-    } catch (e) {}
-
-    // Default fallback, if any
-    randomFallback = null;
     /**
      * Sets the pseudo random number generator to use as a fallback if neither node's `crypto` module nor the Web Crypto
      *  API is available. Please note: It is highly important that the PRNG used is cryptographically secure and that it
